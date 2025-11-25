@@ -1,4 +1,6 @@
-﻿string[] recipeData = File.ReadAllLines("recipeData.csv");
+﻿using System.Diagnostics.Contracts;
+
+string[] recipeData = File.ReadAllLines("recipeData.csv");
 Console.WriteLine($"Loaded {recipeData.Length} lines from recipeData.csv");
 
 var ingredients = new List<string>();
@@ -247,13 +249,17 @@ var craftingPlan = new List<(string Action, string Ingredient1, string Ingredien
 bool canCraftIngredient(string ingredient, Dictionary<string, int> currentInventory)
 {
     if (currentInventory.GetValueOrDefault(ingredient, 0) > 0)
+    {
         return true;
+    }
+
+    if (creationRecipes.TryGetValue(ingredient, out var recipe))
+    {
+        var (ing1, ing2) = recipe;
+        return canCraftIngredient(ing1, currentInventory) && canCraftIngredient(ing2, currentInventory);
+    }
     
-    if (!creationRecipes.ContainsKey(ingredient))
-        return false;
-    
-    var (ing1, ing2) = creationRecipes[ingredient];
-    return canCraftIngredient(ing1, currentInventory) && canCraftIngredient(ing2, currentInventory);
+    return false;
 }
 
 // Helper function to craft an ingredient (recursively if needed)
@@ -265,16 +271,16 @@ bool tryCraftIngredient(string ingredient, Dictionary<string, int> currentInvent
         return true;
     }
     
-    if (!creationRecipes.ContainsKey(ingredient))
+    if (!creationRecipes.TryGetValue(ingredient, out var recipe))
+    {
         return false;
-    
-    var (ing1, ing2) = creationRecipes[ingredient];
-    
+    }
+
+    var (ing1, ing2) = recipe;
+
     if (tryCraftIngredient(ing1, currentInventory, steps) && tryCraftIngredient(ing2, currentInventory, steps))
     {
         steps.Add(("CREATE", ing1, ing2, ingredient));
-        currentInventory[ingredient] = currentInventory.GetValueOrDefault(ingredient, 0) + 1;
-        currentInventory[ingredient]--;
         return true;
     }
     
@@ -298,7 +304,9 @@ foreach (var (ing1, ing2, quantity, cost) in targetRecipes)
             
             // Only proceed if we're using at least one complex ingredient in this phase
             if (complexUsed == 0)
+            {
                 break;
+            }
             
             // Apply the crafting
             workingInventory = testInventory;
@@ -348,7 +356,9 @@ foreach (var (ing1, ing2, quantity, cost) in targetRecipes)
             foreach (var (action, i1, i2, result) in steps)
             {
                 if (action == "CREATE")
+                {
                     craftingPlan.Add((action, i1, i2, 1, $"Creating {result}"));
+                }
             }
             
             // Log the recipe execution
@@ -382,11 +392,33 @@ foreach (var (action, ing1, ing2, qty, details) in craftingPlan)
 {
     if (action == "CREATE")
     {
-        Console.WriteLine($"{stepNumber}. Combine {ing1} + {ing2} to create intermediate ingredient");
+        Console.WriteLine($"{stepNumber}. Combine {ing1} + {ing2} to create intermediate ingredient - {details}");
     }
     else
     {
         Console.WriteLine($"{stepNumber}. Combine {ing1} + {ing2} => {qty} x {targetedReward}");
     }
     stepNumber++;
+}
+
+Console.WriteLine("\n=== RECIPE SUMMARY ===\n");
+var recipeCounts = new Dictionary<(string, string), int>();
+
+foreach (var (action, ing1, ing2, qty, details) in craftingPlan)
+{
+    var key = (ing1, ing2);
+    recipeCounts[key] = recipeCounts.GetValueOrDefault(key, 0) + 1;
+}
+
+foreach (var ((ing1, ing2), count) in recipeCounts.OrderByDescending(kv => kv.Value))
+{
+    var recipeKey = (ing1, ing2);
+    if (recipes.TryGetValue(recipeKey, out var recipeResult))
+    {
+        Console.WriteLine($"({ing1} + {ing2}) => {recipeResult.Quantity} x {recipeResult.Result}: Execute {count} time(s)");
+    }
+    else
+    {
+        Console.WriteLine($"({ing1} + {ing2}): Execute {count} time(s)");
+    }
 }
