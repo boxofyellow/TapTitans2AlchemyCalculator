@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.Contracts;
-
-string[] recipeData = File.ReadAllLines("recipeData.csv");
+﻿string[] recipeData = File.ReadAllLines("recipeData.csv");
 Console.WriteLine($"Loaded {recipeData.Length} lines from recipeData.csv");
 
 var ingredients = new List<string>();
