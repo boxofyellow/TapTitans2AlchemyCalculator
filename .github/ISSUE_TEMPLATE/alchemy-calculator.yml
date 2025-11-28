@@ -1,0 +1,66 @@
+name: Alchemy Calculator Request
+description: Request an alchemy calculation with your inventory
+title: "[Alchemy] Calculate optimal crafting"
+labels: ["alchemy-calculator"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Alchemy Calculator Request
+        Fill in your targeted reward and inventory data below. The calculator will run automatically when you submit this issue.
+
+  - type: input
+    id: targeted-reward
+    attributes:
+      label: Targeted Reward
+      description: What reward do you want to optimize for?
+      placeholder: "Wildcards"
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ### Available Rewards
+        - Currency
+        - Wildcards
+        - Skill Points
+        - Raid Cards
+        - Pet Eggs
+        - Hero Weapons
+        - Crafting Shards
+        - Perks
+        - Fortune Weapons
+        - Clan Scroll
+        - Fortune Scroll
+        - Common Equipment
+        - Rare Equipment
+        - Event Equipment (various)
+        - Legendary Equipment (various)
+        - Unique Equipment (various)
+
+  - type: textarea
+    id: inventory-data
+    attributes:
+      label: Inventory Data
+      description: Enter your current inventory in CSV format below
+      value: |
+        Ingredient,Quantity
+        Leaf,0
+        Sand,0
+        Flame,0
+        Pepper,0
+        Steel,0
+        Feather,0
+        Beetle,0
+        Lightning,0
+        Scale,0
+        Crystal,0
+        Tooth,0
+        Egg,0
+        Shadow,0
+        Spirit,0
+        Essence,0
+        Power,0
+    validations:
+      required: true

@@ -1,0 +1,310 @@
+name: Alchemy Calculator
+
+on:
+  issues:
+    types: [opened, edited]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  run-calculator:
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.labels.*.name, 'alchemy-calculator')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Determine input source and add eyes reaction
+        id: get-input
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const isPR = !!context.payload.issue?.pull_request;
+            const isIssueComment = context.eventName === 'issue_comment';
+            
+            let inputBody = '';
+            let reactionTarget = {};
+            
+            // Post link to workflow run as early as possible
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `🔄 Alchemy Calculator workflow started! [View run](${runUrl})`
+            });
+            
+            if (isIssueComment) {
+              // For issue_comment events, use the comment body
+              inputBody = context.payload.comment.body;
+              reactionTarget = {
+                comment_id: context.payload.comment.id
+              };
+              
+              // Add eyes reaction to the comment
+              await github.rest.reactions.createForIssueComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: context.payload.comment.id,
+                content: 'eyes'
+              });
+            } else {
+              // For issue opened/edited events
+              // Check if there are any comments
+              const comments = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number
+              });
+              
+              if (comments.data.length > 0) {
+                // Use the last comment
+                const lastComment = comments.data[comments.data.length - 1];
+                inputBody = lastComment.body;
+                reactionTarget = {
+                  comment_id: lastComment.id
+                };
+                
+                // Add eyes reaction to the comment
+                await github.rest.reactions.createForIssueComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: lastComment.id,
+                  content: 'eyes'
+                });
+              } else {
+                // Use the issue body
+                inputBody = context.payload.issue.body || '';
+                reactionTarget = {
+                  issue_number: context.issue.number
+                };
+                
+                // Add eyes reaction to the issue
+                await github.rest.reactions.createForIssue({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  content: 'eyes'
+                });
+              }
+            }
+            
+            // Parse targeted reward - handle both form format and markdown format
+            // Form format: ### Targeted Reward\n\nValue
+            // Markdown format: ## Targeted Reward\nValue
+            let targetedReward = '';
+            const rewardMatch = inputBody.match(/###?\s*Targeted Reward\s*\n+([^\n#]+)/i);
+            if (rewardMatch) {
+              targetedReward = rewardMatch[1].trim();
+            }
+            
+            // Parse inventory data - handle CSV format
+            // Look for content after "Inventory Data" header
+            let inventoryData = '';
+            const inventoryMatch = inputBody.match(/###?\s*Inventory Data\s*\n+([\s\S]*?)(?=\n###|$)/i);
+            if (inventoryMatch) {
+              // Extract CSV content directly
+              const csvContent = inventoryMatch[1].trim();
+              const lines = csvContent.split('\n');
+              const csvLines = [];
+              
+              for (const line of lines) {
+                const trimmedLine = line.trim();
+                // Check if line is a valid CSV line (contains comma and has values)
+                if (trimmedLine && trimmedLine.includes(',')) {
+                  csvLines.push(trimmedLine);
+                }
+              }
+              
+              if (csvLines.length > 0) {
+                inventoryData = csvLines.join('\n');
+              }
+            }
+            
+            // Store values for later steps - write to files to avoid shell escaping issues
+            fs.writeFileSync('/tmp/targeted_reward.txt', targetedReward);
+            core.setOutput('has_targeted_reward', targetedReward.length > 0 ? 'true' : 'false');
+            core.setOutput('is_pr', isPR);
+            core.setOutput('is_comment', isIssueComment);
+            core.setOutput('reaction_target', JSON.stringify(reactionTarget));
+            
+            // Write inventory data to a file to avoid shell escaping issues
+            fs.writeFileSync('/tmp/inventory_data.txt', inventoryData);
+            core.setOutput('has_inventory', inventoryData.length > 0 ? 'true' : 'false');
+
+      - name: Validate inputs for issues
+        id: validate-inputs
+        if: steps.get-input.outputs.is_pr != 'true' && (steps.get-input.outputs.has_targeted_reward != 'true' || steps.get-input.outputs.has_inventory != 'true')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const hasTargetedReward = '${{ steps.get-input.outputs.has_targeted_reward }}';
+            const hasInventory = '${{ steps.get-input.outputs.has_inventory }}';
+            const reactionTarget = JSON.parse('${{ steps.get-input.outputs.reaction_target }}');
+            
+            let missingInputs = [];
+            if (hasTargetedReward !== 'true') {
+              missingInputs.push('**Targeted Reward**');
+            }
+            if (hasInventory !== 'true') {
+              missingInputs.push('**Inventory Data**');
+            }
+            
+            const helpMessage = `❌ Missing required inputs: ${missingInputs.join(', ')}
+
+            Please provide the following in your issue body or a comment:
+
+            ## Targeted Reward
+            Wildcards
+
+            ## Inventory Data
+            Ingredient,Quantity
+            Leaf,5
+            Sand,3
+            Flame,2
+            Pepper,1
+            Steel,4
+            Feather,0
+            Beetle,0
+            Lightning,0
+            Scale,0
+            Crystal,0
+            Tooth,0
+            Egg,0
+            Shadow,0
+            Spirit,0
+            Essence,0
+            Power,2
+
+            Valid rewards include: Currency, Wildcards, Skill Points, Raid Cards, Pet Eggs, Hero Weapons, Crafting Shards, Perks, Fortune Weapons, Clan Scroll, Fortune Scroll, and various equipment types.`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: helpMessage
+            });
+            
+            // Add error reaction
+            if (reactionTarget.comment_id) {
+              await github.rest.reactions.createForIssueComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: reactionTarget.comment_id,
+                content: 'confused'
+              });
+            } else {
+              await github.rest.reactions.createForIssue({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: reactionTarget.issue_number,
+                content: 'confused'
+              });
+            }
+            
+            core.setFailed('Missing required inputs for issue');
+
+      - name: Prepare inventory data
+        run: |
+          if [ -s /tmp/inventory_data.txt ]; then
+            cp /tmp/inventory_data.txt inventoryData.csv
+            echo "Using provided inventory data:"
+          else
+            echo "Using default inventory data:"
+          fi
+          cat inventoryData.csv
+
+      - name: Build application
+        run: dotnet build --configuration Release
+
+      - name: Run application
+        id: run-app
+        run: |
+          # Read targeted reward from file (safer than shell interpolation)
+          if [ -s /tmp/targeted_reward.txt ]; then
+            TARGETED_REWARD=$(cat /tmp/targeted_reward.txt)
+          else
+            TARGETED_REWARD="Wildcards"
+          fi
+          
+          echo "Running with targeted reward: $TARGETED_REWARD"
+          
+          # Run the application and capture output
+          set +e
+          OUTPUT=$(dotnet run --configuration Release -- "$TARGETED_REWARD" 2>&1)
+          EXIT_CODE=$?
+          set -e
+          
+          # Save output to file for later use
+          echo "$OUTPUT" > /tmp/app_output.txt
+          
+          # Set output for next step
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+
+      - name: Post results
+        if: always() && steps.validate-inputs.outcome != 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const reactionTarget = JSON.parse('${{ steps.get-input.outputs.reaction_target }}');
+            const exitCode = '${{ steps.run-app.outputs.exit_code }}';
+            
+            let output = '';
+            try {
+              output = fs.readFileSync('/tmp/app_output.txt', 'utf8');
+            } catch (e) {
+              output = 'Failed to read application output';
+            }
+            
+            let resultEmoji = '+1';  // success indicator
+            let statusMessage = '✅ Calculation completed successfully!';
+            
+            if (exitCode !== '0' && exitCode !== '') {
+              resultEmoji = 'confused';
+              statusMessage = '❌ Calculation failed!';
+            }
+            
+            // Post the output as a comment
+            const comment = `${statusMessage}
+
+            \`\`\`
+            ${output}
+            \`\`\`
+            `;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
+            
+            // Add result reaction
+            if (reactionTarget.comment_id) {
+              await github.rest.reactions.createForIssueComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: reactionTarget.comment_id,
+                content: resultEmoji
+              });
+            } else if (reactionTarget.issue_number) {
+              await github.rest.reactions.createForIssue({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: reactionTarget.issue_number,
+                content: resultEmoji
+              });
+            }

@@ -1,4 +1,11 @@
-﻿string[] recipeData = File.ReadAllLines("recipeData.csv");
+﻿// Parse optional command line argument for targeted reward
+var targetedReward = "Wildcards";
+if (args.Length > 0)
+{
+    targetedReward = args[0];
+}
+
+string[] recipeData = File.ReadAllLines("recipeData.csv");
 Console.WriteLine($"Loaded {recipeData.Length} lines from recipeData.csv");
 
 var ingredients = new List<string>();
@@ -220,8 +227,6 @@ foreach (var reward in rewardCosts.Keys.OrderBy(x => x))
     }
 }
 
-var targetedReward = "Currency";
-
 // Maximize crafting the target reward
 Console.WriteLine($"\n\n=== OPTIMIZING FOR TARGET REWARD: {targetedReward} ===\n");
 
@@ -419,4 +424,11 @@ foreach (var ((ing1, ing2), count) in recipeCounts.OrderByDescending(kv => kv.Va
     {
         Console.WriteLine($"({ing1} + {ing2}): Execute {count} time(s)");
     }
+}
+
+Console.WriteLine("\n=== REMAINING INVENTORY (CSV FORMAT) ===\n");
+Console.WriteLine("Ingredient,Quantity");
+foreach (var ingredient in ingredients)
+{
+    Console.WriteLine($"{ingredient},{workingInventory.GetValueOrDefault(ingredient, 0)}");
 }
