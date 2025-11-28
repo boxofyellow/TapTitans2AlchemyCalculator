@@ -61,44 +61,20 @@ jobs:
                 content: 'eyes'
               });
             } else {
-              // For issue opened/edited events
-              // Check if there are any comments
-              const comments = await github.rest.issues.listComments({
+              // For issue opened/edited events, always use the issue body
+              // This avoids accidentally reading our own "workflow started" comment
+              inputBody = context.payload.issue.body || '';
+              reactionTarget = {
+                issue_number: context.issue.number
+              };
+              
+              // Add eyes reaction to the issue
+              await github.rest.reactions.createForIssue({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: context.issue.number
+                issue_number: context.issue.number,
+                content: 'eyes'
               });
-              
-              if (comments.data.length > 0) {
-                // Use the last comment
-                const lastComment = comments.data[comments.data.length - 1];
-                inputBody = lastComment.body;
-                reactionTarget = {
-                  comment_id: lastComment.id
-                };
-                
-                // Add eyes reaction to the comment
-                await github.rest.reactions.createForIssueComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  comment_id: lastComment.id,
-                  content: 'eyes'
-                });
-              } else {
-                // Use the issue body
-                inputBody = context.payload.issue.body || '';
-                reactionTarget = {
-                  issue_number: context.issue.number
-                };
-                
-                // Add eyes reaction to the issue
-                await github.rest.reactions.createForIssue({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: context.issue.number,
-                  content: 'eyes'
-                });
-              }
             }
             
             // Parse targeted reward - handle both form format and markdown format
