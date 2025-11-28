@@ -126,8 +126,9 @@ jobs:
               }
             }
             
-            // Store values for later steps
-            core.setOutput('targeted_reward', targetedReward);
+            // Store values for later steps - write to files to avoid shell escaping issues
+            fs.writeFileSync('/tmp/targeted_reward.txt', targetedReward);
+            core.setOutput('has_targeted_reward', targetedReward.length > 0 ? 'true' : 'false');
             core.setOutput('is_pr', isPR);
             core.setOutput('is_comment', isIssueComment);
             core.setOutput('reaction_target', JSON.stringify(reactionTarget));
@@ -146,16 +147,16 @@ jobs:
             });
 
       - name: Validate inputs for issues
-        if: steps.get-input.outputs.is_pr != 'true' && (steps.get-input.outputs.targeted_reward == '' || steps.get-input.outputs.has_inventory != 'true')
+        if: steps.get-input.outputs.is_pr != 'true' && (steps.get-input.outputs.has_targeted_reward != 'true' || steps.get-input.outputs.has_inventory != 'true')
         uses: actions/github-script@v7
         with:
           script: |
-            const targetedReward = '${{ steps.get-input.outputs.targeted_reward }}';
+            const hasTargetedReward = '${{ steps.get-input.outputs.has_targeted_reward }}';
             const hasInventory = '${{ steps.get-input.outputs.has_inventory }}';
             const reactionTarget = JSON.parse('${{ steps.get-input.outputs.reaction_target }}');
             
             let missingInputs = [];
-            if (!targetedReward) {
+            if (hasTargetedReward !== 'true') {
               missingInputs.push('**Targeted Reward**');
             }
             if (hasInventory !== 'true') {
@@ -237,8 +238,10 @@ jobs:
         id: run-app
         if: success()
         run: |
-          TARGETED_REWARD='${{ steps.get-input.outputs.targeted_reward }}'
-          if [ -z "$TARGETED_REWARD" ]; then
+          # Read targeted reward from file (safer than shell interpolation)
+          if [ -s /tmp/targeted_reward.txt ]; then
+            TARGETED_REWARD=$(cat /tmp/targeted_reward.txt)
+          else
             TARGETED_REWARD="Wildcards"
           fi
           
