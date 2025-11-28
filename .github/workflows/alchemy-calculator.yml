@@ -17,8 +17,50 @@ jobs:
     if: contains(github.event.issue.labels.*.name, 'alchemy-calculator')
     
     steps:
+      - name: Determine checkout ref
+        id: checkout-ref
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const isPR = !!context.payload.issue?.pull_request;
+            
+            if (isPR) {
+              // For PRs, get the PR details to find the head ref
+              const pr = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.issue.number
+              });
+              const headRef = pr.data.head.ref;
+              console.log(`PR detected, using head ref: ${headRef}`);
+              core.setOutput('ref', headRef);
+              return;
+            }
+            
+            // For issues, check if a branch/sha is specified in the issue body
+            const issueBody = context.payload.issue?.body || '';
+            
+            // Parse branch/sha - handle both form format and markdown format
+            // Form format: ### Branch/SHA (Optional)\n\nValue
+            // Markdown format: ## Branch/SHA (Optional)\nValue
+            let branchSha = '';
+            const branchMatch = issueBody.match(/###?\s*Branch\/SHA\s*\(Optional\)\s*\n+([^\n#]+)/i);
+            if (branchMatch) {
+              branchSha = branchMatch[1].trim();
+            }
+            
+            if (branchSha && branchSha !== '_No response_' && branchSha !== '') {
+              console.log(`Branch/SHA specified in issue: ${branchSha}`);
+              core.setOutput('ref', branchSha);
+            } else {
+              console.log('No branch/SHA specified, using default branch');
+              core.setOutput('ref', '');
+            }
+
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.checkout-ref.outputs.ref || github.ref }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
