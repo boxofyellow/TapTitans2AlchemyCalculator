@@ -305,6 +305,10 @@ jobs:
           # Save output to file for later use
           echo "$OUTPUT" > /tmp/app_output.txt
           
+          # Write job summary
+          echo "# Alchemy Calculator Results" >> $GITHUB_STEP_SUMMARY
+          echo "$OUTPUT" >> $GITHUB_STEP_SUMMARY
+          
           # Set output for next step
           echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
 
@@ -361,14 +365,3 @@ jobs:
                 content: resultEmoji
               });
             }
-
-      - name: Write job summary
-        if: always() && steps.validate-inputs.outcome != 'failure'
-        run: |
-          echo "# Alchemy Calculator Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          if [ -f /tmp/app_output.txt ]; then
-            cat /tmp/app_output.txt >> $GITHUB_STEP_SUMMARY
-          else
-            echo "Failed to read application output" >> $GITHUB_STEP_SUMMARY
-          fi
