@@ -460,18 +460,58 @@ foreach (var (action, ing1, ing2, qty, details) in craftingPlan)
 Console.WriteLine();
 Console.WriteLine("## 📊 RECIPE SUMMARY");
 Console.WriteLine();
+var recipeOrder = new List<(string, string)>();
 var recipeCounts = new Dictionary<(string, string), int>();
 
 foreach (var (action, ing1, ing2, qty, details) in craftingPlan)
 {
     var key = (ing1, ing2);
+    if (!recipeCounts.ContainsKey(key))
+    {
+        recipeOrder.Add(key);
+    }
     recipeCounts[key] = recipeCounts.GetValueOrDefault(key, 0) + 1;
 }
 
-foreach (var ((ing1, ing2), count) in recipeCounts.OrderByDescending(kv => kv.Value))
+// Topologically sort so that recipes creating intermediate ingredients appear
+// before recipes that consume them
+var recipesInSummary = new HashSet<(string, string)>(recipeOrder);
+var visited = new HashSet<(string, string)>();
+var currentlyVisiting = new HashSet<(string, string)>();
+var sortedRecipes = new List<(string, string)>();
+
+void visitRecipe((string, string) recipe)
 {
-    var recipeKey = (ing1, ing2);
-    if (recipes.TryGetValue(recipeKey, out var recipeResult))
+    if (visited.Contains(recipe)) return;
+    if (!currentlyVisiting.Add(recipe))
+    {
+        // Cycle detected; skip to avoid infinite recursion
+        return;
+    }
+    var (i1, i2) = recipe;
+    // Visit prerequisite recipes first (those that create i1 or i2)
+    if (creationRecipes.TryGetValue(i1, out var prereq1) && recipesInSummary.Contains(prereq1))
+    {
+        visitRecipe(prereq1);
+    }
+    if (creationRecipes.TryGetValue(i2, out var prereq2) && recipesInSummary.Contains(prereq2))
+    {
+        visitRecipe(prereq2);
+    }
+    currentlyVisiting.Remove(recipe);
+    visited.Add(recipe);
+    sortedRecipes.Add(recipe);
+}
+
+foreach (var recipe in recipeOrder)
+{
+    visitRecipe(recipe);
+}
+
+foreach (var (ing1, ing2) in sortedRecipes)
+{
+    var count = recipeCounts[(ing1, ing2)];
+    if (recipes.TryGetValue((ing1, ing2), out var recipeResult))
     {
         Console.WriteLine($"- **({ing1} + {ing2})** => {recipeResult.Quantity} x {recipeResult.Result}: Execute {count} time(s)");
     }
