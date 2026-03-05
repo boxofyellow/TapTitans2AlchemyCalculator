@@ -511,14 +511,8 @@ foreach (var recipe in recipeOrder)
 foreach (var (ing1, ing2) in sortedRecipes)
 {
     var count = recipeCounts[(ing1, ing2)];
-    if (recipes.TryGetValue((ing1, ing2), out var recipeResult))
-    {
-        Console.WriteLine($"- **({ing1} + {ing2})** => {recipeResult.Quantity} x {recipeResult.Result}: Execute {count} time(s)");
-    }
-    else
-    {
-        Console.WriteLine($"- **({ing1} + {ing2})**: Execute {count} time(s)");
-    }
+    var recipeResult = recipes[(ing1, ing2)];
+    Console.WriteLine($"- **({ing1} + {ing2})** => {recipeResult.Quantity} x {recipeResult.Result}: Execute {count} time(s)");
 }
 
 // Start hidden section for Remaining Inventory
