@@ -4,9 +4,9 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+# No write permissions — untrusted code from forks runs here.
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
   run-calculator:
@@ -14,10 +14,10 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
@@ -32,49 +32,21 @@ jobs:
           OUTPUT=$(dotnet run --configuration Release 2>&1)
           EXIT_CODE=$?
           set -e
-          
-          # Save output to file for later use
-          echo "$OUTPUT" > /tmp/app_output.txt
-          
+
           # Write job summary
           echo "# PR Check Results" >> $GITHUB_STEP_SUMMARY
           echo "$OUTPUT" >> $GITHUB_STEP_SUMMARY
-          
-          # Set output for next step
-          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
 
-      - name: Post results to PR
+          # Save outputs for the pr-comment workflow
+          mkdir -p /tmp/pr-check
+          echo "$OUTPUT" > /tmp/pr-check/app_output.txt
+          echo "$EXIT_CODE" > /tmp/pr-check/exit_code.txt
+          # PR number is safe to read from the event — it is not attacker-controlled content
+          echo "${{ github.event.pull_request.number }}" > /tmp/pr-check/pr_number.txt
+
+      - name: Upload results artifact
         if: always()
-        uses: actions/github-script@v8
+        uses: actions/upload-artifact@v4
         with:
-          script: |
-            const fs = require('fs');
-            const exitCode = '${{ steps.run-app.outputs.exit_code }}';
-            
-            let output = '';
-            try {
-              output = fs.readFileSync('/tmp/app_output.txt', 'utf8');
-            } catch (e) {
-              output = 'Failed to read application output';
-            }
-            
-            let statusEmoji = '💹';
-            let statusMessage = 'Application ran successfully with default settings';
-            let comment = '';
-            
-            if (exitCode !== '0') {
-              statusEmoji = '❌';
-              statusMessage = 'Application failed to run';
-              // Use code block for failed output
-              comment = `${statusEmoji} **PR Check Results**\n\n${statusMessage}\n\n<details>\n<summary>Click to expand output</summary>\n\n\`\`\`\n${output}\n\`\`\`\n\n</details>`;
-            } else {
-              // Use markdown output directly for successful runs (wrapped in details)
-              comment = `${statusEmoji} **PR Check Results**\n\n${statusMessage}\n\n<details>\n<summary>Click to expand output</summary>\n\n${output}\n\n</details>`;
-            }
-            
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: comment
-            });
+          name: pr-check-results
+          path: /tmp/pr-check/
