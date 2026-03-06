@@ -17,7 +17,7 @@ jobs:
 
     steps:
       - name: Download results artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: pr-check-results
           path: /tmp/pr-check
@@ -25,7 +25,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Post results to PR
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const fs = require('fs');
@@ -46,8 +46,12 @@ jobs:
             if (exitCode !== '0') {
               statusEmoji = '❌';
               statusMessage = 'Application failed to run';
+              // Use code block for failed output
+              comment = `${statusEmoji} **PR Check Results**\n\n${statusMessage}\n\n<details>\n<summary>Click to expand output</summary>\n\n\`\`\`\n${output}\n\`\`\`\n\n</details>`;
+            } else {
+              // Use markdown output directly for successful runs (wrapped in details)
+              comment = `${statusEmoji} **PR Check Results**\n\n${statusMessage}\n\n<details>\n<summary>Click to expand output</summary>\n\n${output}\n\n</details>`;
             }
-            comment = `${statusEmoji} **PR Check Results**\n\n${statusMessage}\n\n<details>\n<summary>Click to expand output</summary>\n\n\`\`\`\n${output}\n\`\`\`\n\n</details>`;
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,
