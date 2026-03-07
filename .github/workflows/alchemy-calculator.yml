@@ -7,14 +7,81 @@ on:
     types: [created]
 
 jobs:
+  notify-start:
+    runs-on: ubuntu-latest
+    # Write permissions are safe here — no user-controlled code runs in this job.
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    if: contains(github.event.issue.labels.*.name, 'alchemy-calculator')
+    outputs:
+      reaction_target: ${{ steps.react-and-notify.outputs.reaction_target }}
+
+    steps:
+      - name: React and notify workflow start
+        id: react-and-notify
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const isIssueComment = context.eventName === 'issue_comment';
+
+            let reactionTarget = {};
+
+            if (isIssueComment) {
+              reactionTarget = { comment_id: context.payload.comment.id };
+            } else {
+              // For issue opened/edited events, find the last comment (if any) to react to
+              const comments = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number
+              });
+
+              if (comments.data.length > 0) {
+                reactionTarget = { comment_id: comments.data[comments.data.length - 1].id };
+              } else {
+                reactionTarget = { issue_number: context.issue.number };
+              }
+            }
+
+            // Add eyes reaction to the triggering comment/issue
+            if (reactionTarget.comment_id) {
+              await github.rest.reactions.createForIssueComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: reactionTarget.comment_id,
+                content: 'eyes'
+              });
+            } else {
+              await github.rest.reactions.createForIssue({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: reactionTarget.issue_number,
+                content: 'eyes'
+              });
+            }
+
+            // Post "workflow started" comment with link to the run
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `🔄 Alchemy Calculator workflow started! [View run](${runUrl})`
+            });
+
+            // reaction_target contains only integer IDs set by GitHub — no injection risk
+            core.setOutput('reaction_target', JSON.stringify(reactionTarget));
+
   run-calculator:
     runs-on: ubuntu-latest
+    needs: notify-start
     # No write permissions — potentially untrusted code (e.g., from a fork PR head) runs here.
     permissions:
       contents: read
       issues: read
       pull-requests: read
-    if: contains(github.event.issue.labels.*.name, 'alchemy-calculator')
 
     steps:
       - name: Determine input source
@@ -25,39 +92,25 @@ jobs:
             const fs = require('fs');
             const isPR = !!context.payload.issue?.pull_request;
             const isIssueComment = context.eventName === 'issue_comment';
+            // reaction_target contains only integer IDs set by GitHub — no injection risk
+            const reactionTarget = JSON.parse('${{ needs.notify-start.outputs.reaction_target }}' || '{}');
 
             let inputBody = '';
-            let reactionTarget = {};
 
             if (isIssueComment) {
-              // For issue_comment events, use the comment body
+              // For issue_comment events, use the comment body from the event payload
               inputBody = context.payload.comment.body;
-              reactionTarget = {
-                comment_id: context.payload.comment.id
-              };
-            } else {
-              // For issue opened/edited events
-              // Check if there are any comments
-              const comments = await github.rest.issues.listComments({
+            } else if (reactionTarget.comment_id) {
+              // Fetch the specific comment identified by notify-start
+              const comment = await github.rest.issues.getComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: context.issue.number
+                comment_id: reactionTarget.comment_id
               });
-
-              if (comments.data.length > 0) {
-                // Use the last comment
-                const lastComment = comments.data[comments.data.length - 1];
-                inputBody = lastComment.body;
-                reactionTarget = {
-                  comment_id: lastComment.id
-                };
-              } else {
-                // Use the issue body
-                inputBody = context.payload.issue.body || '';
-                reactionTarget = {
-                  issue_number: context.issue.number
-                };
-              }
+              inputBody = comment.data.body;
+            } else {
+              // Use the issue body
+              inputBody = context.payload.issue.body || '';
             }
 
             // Parse targeted reward - handle both form format and markdown format
@@ -118,7 +171,6 @@ jobs:
             core.setOutput('has_targeted_reward', targetedReward.length > 0 ? 'true' : 'false');
             core.setOutput('is_pr', isPR ? 'true' : 'false');
             core.setOutput('is_comment', isIssueComment ? 'true' : 'false');
-            core.setOutput('reaction_target', JSON.stringify(reactionTarget));
 
             // Write inventory data to a file to avoid shell escaping issues
             fs.writeFileSync('/tmp/inventory_data.txt', inventoryData);
@@ -224,20 +276,19 @@ jobs:
             let appOutput = '';
             try {
               appOutput = fs.readFileSync('/tmp/app_output.txt', 'utf8');
-            } catch (e) {}
+            } catch (e) {
+              console.log('Warning: could not read app output:', e.message);
+            }
             fs.writeFileSync('/tmp/calculator-results/app_output.txt', appOutput);
 
             // Fall back to '1' (failure) if run-app was skipped
             const exitCode = '${{ steps.run-app.outputs.exit_code }}';
             fs.writeFileSync('/tmp/calculator-results/exit_code.txt', exitCode || '1');
 
-            // reaction_target is JSON containing only integer values — no injection risk
-            fs.writeFileSync('/tmp/calculator-results/reaction_target.json', '${{ steps.get-input.outputs.reaction_target }}');
+            // reaction_target contains only integer IDs set by GitHub — no injection risk
+            fs.writeFileSync('/tmp/calculator-results/reaction_target.json', '${{ needs.notify-start.outputs.reaction_target }}');
             fs.writeFileSync('/tmp/calculator-results/has_targeted_reward.txt', '${{ steps.get-input.outputs.has_targeted_reward }}');
             fs.writeFileSync('/tmp/calculator-results/has_inventory.txt', '${{ steps.get-input.outputs.has_inventory }}');
-            fs.writeFileSync('/tmp/calculator-results/is_pr.txt', '${{ steps.get-input.outputs.is_pr }}');
-            fs.writeFileSync('/tmp/calculator-results/issue_number.txt', '${{ github.event.issue.number }}');
-            fs.writeFileSync('/tmp/calculator-results/run_url.txt', `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`);
 
       - name: Upload results artifact
         if: always()
@@ -270,36 +321,21 @@ jobs:
           script: |
             const fs = require('fs');
 
-            const issueNumber = parseInt(fs.readFileSync('/tmp/calculator-results/issue_number.txt', 'utf8').trim(), 10);
             const exitCode = fs.readFileSync('/tmp/calculator-results/exit_code.txt', 'utf8').trim();
             const reactionTarget = JSON.parse(fs.readFileSync('/tmp/calculator-results/reaction_target.json', 'utf8').trim());
             const hasTargetedReward = fs.readFileSync('/tmp/calculator-results/has_targeted_reward.txt', 'utf8').trim();
             const hasInventory = fs.readFileSync('/tmp/calculator-results/has_inventory.txt', 'utf8').trim();
-            const isPR = fs.readFileSync('/tmp/calculator-results/is_pr.txt', 'utf8').trim() === 'true';
-            const runUrl = fs.readFileSync('/tmp/calculator-results/run_url.txt', 'utf8').trim();
+
+            // Recompute these from context — no need to save as artifact files
+            const isPR = !!context.payload.issue?.pull_request;
+            const issueNumber = context.issue.number;
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
 
             let output = '';
             try {
               output = fs.readFileSync('/tmp/calculator-results/app_output.txt', 'utf8');
             } catch (e) {
               output = 'Failed to read application output';
-            }
-
-            // Add eyes reaction to the triggering comment/issue
-            if (reactionTarget.comment_id) {
-              await github.rest.reactions.createForIssueComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: reactionTarget.comment_id,
-                content: 'eyes'
-              });
-            } else if (reactionTarget.issue_number) {
-              await github.rest.reactions.createForIssue({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: reactionTarget.issue_number,
-                content: 'eyes'
-              });
             }
 
             // Check for missing inputs (non-PR issues only)
