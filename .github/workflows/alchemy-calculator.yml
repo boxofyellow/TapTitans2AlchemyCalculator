@@ -6,18 +6,18 @@ on:
   issue_comment:
     types: [created]
 
-permissions:
-  contents: read
-  issues: write
-  pull-requests: write
-
 jobs:
   run-calculator:
     runs-on: ubuntu-latest
+    # No write permissions — potentially untrusted code (e.g., from a fork PR head) runs here.
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
     if: contains(github.event.issue.labels.*.name, 'alchemy-calculator')
-    
+
     steps:
-      - name: Determine input source and add eyes reaction
+      - name: Determine input source
         id: get-input
         uses: actions/github-script@v8
         with:
@@ -25,24 +25,16 @@ jobs:
             const fs = require('fs');
             const isPR = !!context.payload.issue?.pull_request;
             const isIssueComment = context.eventName === 'issue_comment';
-            
+
             let inputBody = '';
             let reactionTarget = {};
-            
+
             if (isIssueComment) {
               // For issue_comment events, use the comment body
               inputBody = context.payload.comment.body;
               reactionTarget = {
                 comment_id: context.payload.comment.id
               };
-              
-              // Add eyes reaction to the comment
-              await github.rest.reactions.createForIssueComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: context.payload.comment.id,
-                content: 'eyes'
-              });
             } else {
               // For issue opened/edited events
               // Check if there are any comments
@@ -51,7 +43,7 @@ jobs:
                 repo: context.repo.repo,
                 issue_number: context.issue.number
               });
-              
+
               if (comments.data.length > 0) {
                 // Use the last comment
                 const lastComment = comments.data[comments.data.length - 1];
@@ -59,41 +51,15 @@ jobs:
                 reactionTarget = {
                   comment_id: lastComment.id
                 };
-                
-                // Add eyes reaction to the comment
-                await github.rest.reactions.createForIssueComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  comment_id: lastComment.id,
-                  content: 'eyes'
-                });
               } else {
                 // Use the issue body
                 inputBody = context.payload.issue.body || '';
                 reactionTarget = {
                   issue_number: context.issue.number
                 };
-                
-                // Add eyes reaction to the issue
-                await github.rest.reactions.createForIssue({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: context.issue.number,
-                  content: 'eyes'
-                });
               }
             }
-            
-            // Post link to workflow run after selecting input source
-            // This ensures we don't accidentally read our own comment when checking for the last comment
-            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `🔄 Alchemy Calculator workflow started! [View run](${runUrl})`
-            });
-            
+
             // Parse targeted reward - handle both form format and markdown format
             // Form format: ### Targeted Reward\n\nValue
             // Markdown format: ## Targeted Reward\nValue
@@ -102,7 +68,7 @@ jobs:
             if (rewardMatch) {
               targetedReward = rewardMatch[1].trim();
             }
-            
+
             // Parse inventory data - handle CSV format
             // Look for content after "Inventory Data" header
             let inventoryData = '';
@@ -112,7 +78,7 @@ jobs:
               const csvContent = inventoryMatch[1].trim();
               const lines = csvContent.split('\n');
               const csvLines = [];
-              
+
               for (const line of lines) {
                 const trimmedLine = line.trim();
                 // Check if line is a valid CSV line (contains comma and has values)
@@ -120,12 +86,12 @@ jobs:
                   csvLines.push(trimmedLine);
                 }
               }
-              
+
               if (csvLines.length > 0) {
                 inventoryData = csvLines.join('\n');
               }
             }
-            
+
             // Parse branch/sha from the input body (issue body or last comment)
             // Form format: ### Branch/SHA (Optional)\n\nValue
             // Markdown format: ## Branch/SHA (Optional)\nValue
@@ -134,11 +100,11 @@ jobs:
             if (branchMatch) {
               branchSha = branchMatch[1].trim();
             }
-            
+
             // Check for valid branch/sha value
             // GitHub forms use '_No response_' for empty optional fields
             const isEmptyResponse = !branchSha || branchSha.startsWith('_') || branchSha === '';
-            
+
             if (!isEmptyResponse) {
               console.log(`Branch/SHA specified: ${branchSha}`);
               core.setOutput('branch_sha', branchSha);
@@ -146,14 +112,14 @@ jobs:
               console.log('No branch/SHA specified, will use default branch');
               core.setOutput('branch_sha', '');
             }
-            
+
             // Store values for later steps - write to files to avoid shell escaping issues
             fs.writeFileSync('/tmp/targeted_reward.txt', targetedReward);
             core.setOutput('has_targeted_reward', targetedReward.length > 0 ? 'true' : 'false');
-            core.setOutput('is_pr', isPR);
-            core.setOutput('is_comment', isIssueComment);
+            core.setOutput('is_pr', isPR ? 'true' : 'false');
+            core.setOutput('is_comment', isIssueComment ? 'true' : 'false');
             core.setOutput('reaction_target', JSON.stringify(reactionTarget));
-            
+
             // Write inventory data to a file to avoid shell escaping issues
             fs.writeFileSync('/tmp/inventory_data.txt', inventoryData);
             core.setOutput('has_inventory', inventoryData.length > 0 ? 'true' : 'false');
@@ -165,7 +131,7 @@ jobs:
           script: |
             const isPR = '${{ steps.get-input.outputs.is_pr }}' === 'true';
             const branchSha = '${{ steps.get-input.outputs.branch_sha }}';
-            
+
             if (isPR) {
               // For PRs, get the PR details to find the head SHA
               // Using SHA instead of ref name to support cross-fork PRs
@@ -179,7 +145,7 @@ jobs:
               core.setOutput('ref', headSha);
               return;
             }
-            
+
             // For issues, use the branch/sha from the input if specified
             if (branchSha) {
               console.log(`Using branch/SHA from input: ${branchSha}`);
@@ -199,77 +165,11 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Validate inputs for issues
-        id: validate-inputs
+      - name: Fail if missing inputs (for non-PR issues)
         if: steps.get-input.outputs.is_pr != 'true' && (steps.get-input.outputs.has_targeted_reward != 'true' || steps.get-input.outputs.has_inventory != 'true')
-        uses: actions/github-script@v8
-        with:
-          script: |
-            const hasTargetedReward = '${{ steps.get-input.outputs.has_targeted_reward }}';
-            const hasInventory = '${{ steps.get-input.outputs.has_inventory }}';
-            const reactionTarget = JSON.parse('${{ steps.get-input.outputs.reaction_target }}');
-            
-            let missingInputs = [];
-            if (hasTargetedReward !== 'true') {
-              missingInputs.push('**Targeted Reward**');
-            }
-            if (hasInventory !== 'true') {
-              missingInputs.push('**Inventory Data**');
-            }
-            
-            const helpMessage = `❌ Missing required inputs: ${missingInputs.join(', ')}
-
-            Please provide the following in your issue body or a comment:
-
-            ## Targeted Reward
-            Wildcards
-
-            ## Inventory Data
-            Ingredient,Quantity
-            Leaf,5
-            Sand,3
-            Flame,2
-            Pepper,1
-            Steel,4
-            Feather,0
-            Beetle,0
-            Lightning,0
-            Scale,0
-            Crystal,0
-            Tooth,0
-            Egg,0
-            Shadow,0
-            Spirit,0
-            Essence,0
-            Power,2
-
-            Valid rewards include: Currency, Wildcards, Skill Points, Raid Cards, Pet Eggs, Hero Weapons, Crafting Shards, Perks, Fortune Weapons, Clan Scroll, Fortune Scroll, and various equipment types.`;
-            
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: helpMessage
-            });
-            
-            // Add error reaction
-            if (reactionTarget.comment_id) {
-              await github.rest.reactions.createForIssueComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: reactionTarget.comment_id,
-                content: 'confused'
-              });
-            } else {
-              await github.rest.reactions.createForIssue({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: reactionTarget.issue_number,
-                content: 'confused'
-              });
-            }
-            
-            core.setFailed('Missing required inputs for issue');
+        run: |
+          echo "Missing required inputs: has_targeted_reward=${{ steps.get-input.outputs.has_targeted_reward }}, has_inventory=${{ steps.get-input.outputs.has_inventory }}"
+          exit 1
 
       - name: Prepare inventory data
         run: |
@@ -293,62 +193,200 @@ jobs:
           else
             TARGETED_REWARD="Wildcards"
           fi
-          
+
           echo "Running with targeted reward: $TARGETED_REWARD"
-          
+
           # Run the application and capture output
           set +e
           OUTPUT=$(dotnet run --configuration Release -- "$TARGETED_REWARD" 2>&1)
           EXIT_CODE=$?
           set -e
-          
+
           # Save output to file for later use
           echo "$OUTPUT" > /tmp/app_output.txt
-          
+
           # Write job summary
           echo "# Alchemy Calculator Results" >> $GITHUB_STEP_SUMMARY
           echo "$OUTPUT" >> $GITHUB_STEP_SUMMARY
-          
+
           # Set output for next step
           echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
 
-      - name: Post results
-        if: always() && steps.validate-inputs.outcome != 'failure'
+      - name: Save outputs for post-comment job
+        if: always()
         uses: actions/github-script@v8
         with:
           script: |
             const fs = require('fs');
-            const reactionTarget = JSON.parse('${{ steps.get-input.outputs.reaction_target }}');
+
+            fs.mkdirSync('/tmp/calculator-results', { recursive: true });
+
+            let appOutput = '';
+            try {
+              appOutput = fs.readFileSync('/tmp/app_output.txt', 'utf8');
+            } catch (e) {}
+            fs.writeFileSync('/tmp/calculator-results/app_output.txt', appOutput);
+
+            // Fall back to '1' (failure) if run-app was skipped
             const exitCode = '${{ steps.run-app.outputs.exit_code }}';
-            
+            fs.writeFileSync('/tmp/calculator-results/exit_code.txt', exitCode || '1');
+
+            // reaction_target is JSON containing only integer values — no injection risk
+            fs.writeFileSync('/tmp/calculator-results/reaction_target.json', '${{ steps.get-input.outputs.reaction_target }}');
+            fs.writeFileSync('/tmp/calculator-results/has_targeted_reward.txt', '${{ steps.get-input.outputs.has_targeted_reward }}');
+            fs.writeFileSync('/tmp/calculator-results/has_inventory.txt', '${{ steps.get-input.outputs.has_inventory }}');
+            fs.writeFileSync('/tmp/calculator-results/is_pr.txt', '${{ steps.get-input.outputs.is_pr }}');
+            fs.writeFileSync('/tmp/calculator-results/issue_number.txt', '${{ github.event.issue.number }}');
+            fs.writeFileSync('/tmp/calculator-results/run_url.txt', `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`);
+
+      - name: Upload results artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: calculator-results
+          path: /tmp/calculator-results/
+          retention-days: 1 # we don't need to keep these very long at all.
+
+  post-comment:
+    runs-on: ubuntu-latest
+    needs: run-calculator
+    if: always() && contains(github.event.issue.labels.*.name, 'alchemy-calculator')
+    # Write token is safe here — no user-controlled code runs in this job.
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Download results artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: calculator-results
+          path: /tmp/calculator-results
+
+      - name: Post results
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+
+            const issueNumber = parseInt(fs.readFileSync('/tmp/calculator-results/issue_number.txt', 'utf8').trim(), 10);
+            const exitCode = fs.readFileSync('/tmp/calculator-results/exit_code.txt', 'utf8').trim();
+            const reactionTarget = JSON.parse(fs.readFileSync('/tmp/calculator-results/reaction_target.json', 'utf8').trim());
+            const hasTargetedReward = fs.readFileSync('/tmp/calculator-results/has_targeted_reward.txt', 'utf8').trim();
+            const hasInventory = fs.readFileSync('/tmp/calculator-results/has_inventory.txt', 'utf8').trim();
+            const isPR = fs.readFileSync('/tmp/calculator-results/is_pr.txt', 'utf8').trim() === 'true';
+            const runUrl = fs.readFileSync('/tmp/calculator-results/run_url.txt', 'utf8').trim();
+
             let output = '';
             try {
-              output = fs.readFileSync('/tmp/app_output.txt', 'utf8');
+              output = fs.readFileSync('/tmp/calculator-results/app_output.txt', 'utf8');
             } catch (e) {
               output = 'Failed to read application output';
             }
-            
+
+            // Add eyes reaction to the triggering comment/issue
+            if (reactionTarget.comment_id) {
+              await github.rest.reactions.createForIssueComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: reactionTarget.comment_id,
+                content: 'eyes'
+              });
+            } else if (reactionTarget.issue_number) {
+              await github.rest.reactions.createForIssue({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: reactionTarget.issue_number,
+                content: 'eyes'
+              });
+            }
+
+            // Check for missing inputs (non-PR issues only)
+            if (!isPR && (hasTargetedReward !== 'true' || hasInventory !== 'true')) {
+              let missingInputs = [];
+              if (hasTargetedReward !== 'true') {
+                missingInputs.push('**Targeted Reward**');
+              }
+              if (hasInventory !== 'true') {
+                missingInputs.push('**Inventory Data**');
+              }
+
+              const helpMessage = `❌ Missing required inputs: ${missingInputs.join(', ')}
+
+              Please provide the following in your issue body or a comment:
+
+              ## Targeted Reward
+              Wildcards
+
+              ## Inventory Data
+              Ingredient,Quantity
+              Leaf,5
+              Sand,3
+              Flame,2
+              Pepper,1
+              Steel,4
+              Feather,0
+              Beetle,0
+              Lightning,0
+              Scale,0
+              Crystal,0
+              Tooth,0
+              Egg,0
+              Shadow,0
+              Spirit,0
+              Essence,0
+              Power,2
+
+              Valid rewards include: Currency, Wildcards, Skill Points, Raid Cards, Pet Eggs, Hero Weapons, Crafting Shards, Perks, Fortune Weapons, Clan Scroll, Fortune Scroll, and various equipment types.`;
+
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                body: helpMessage
+              });
+
+              // Add confused reaction
+              if (reactionTarget.comment_id) {
+                await github.rest.reactions.createForIssueComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: reactionTarget.comment_id,
+                  content: 'confused'
+                });
+              } else if (reactionTarget.issue_number) {
+                await github.rest.reactions.createForIssue({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: reactionTarget.issue_number,
+                  content: 'confused'
+                });
+              }
+              return;
+            }
+
             let resultEmoji = '+1';  // success indicator
             let statusMessage = '✅ Calculation completed successfully!';
             let comment = '';
-            
-            if (exitCode !== '0' && exitCode !== '') {
+
+            if (exitCode !== '0') {
               resultEmoji = 'confused';
               statusMessage = '❌ Calculation failed!';
               // Use code block for failed output
-              comment = `${statusMessage}\n\n\`\`\`\n${output}\n\`\`\``;
+              comment = `${statusMessage}\n\n[View run](${runUrl})\n\n\`\`\`\n${output}\n\`\`\``;
             } else {
               // Use markdown output directly for successful runs
-              comment = `${statusMessage}\n\n${output}`;
+              comment = `${statusMessage}\n\n[View run](${runUrl})\n\n${output}`;
             }
-            
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
+              issue_number: issueNumber,
               body: comment
             });
-            
+
             // Add result reaction
             if (reactionTarget.comment_id) {
               await github.rest.reactions.createForIssueComment({
