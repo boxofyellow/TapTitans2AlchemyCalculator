@@ -362,22 +362,22 @@ jobs:
 
               ## Inventory Data
               Ingredient,Quantity
-              Leaf,5
-              Sand,3
-              Flame,2
-              Pepper,1
-              Steel,4
-              Feather,0
-              Beetle,0
-              Lightning,0
-              Scale,0
-              Crystal,0
+              Poison,0
               Tooth,0
-              Egg,0
-              Shadow,0
+              Steel,0
+              Power,0
               Spirit,0
+              Feather,0
+              Egg,0
+              Mushroom,0
+              Pepper,0
+              Sand,0
+              Lightning,0
+              Beetle,0
+              Flame,0
+              Scale,0
               Essence,0
-              Power,2
+              Shadow,0
 
               Valid rewards include: Currency, Wildcards, Skill Points, Raid Cards, Pet Eggs, Hero Weapons, Crafting Shards, Perks, Fortune Weapons, Clan Scroll, Fortune Scroll, and various equipment types.`;
 
