@@ -45,8 +45,8 @@ To run the Alchemy Calculator against the code in a pull request:
 
    ## Inventory Data
    Ingredient,Quantity
-   Leaf,5
-   Sand,3
+   Poison,5
+   Tooth,3
    ...
    ```
 
