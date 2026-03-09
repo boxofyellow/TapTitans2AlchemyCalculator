@@ -32,6 +32,9 @@ jobs:
           EXIT_CODE=$?
           set -e
 
+          # Log output to the Actions log
+          echo "$OUTPUT"
+
           # Write job summary
           echo "# PR Check Results" >> $GITHUB_STEP_SUMMARY
           echo "$OUTPUT" >> $GITHUB_STEP_SUMMARY
