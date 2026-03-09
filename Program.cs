@@ -41,7 +41,7 @@ foreach (var line in recipeData)
             if (ingredients.Contains(piece))
             {
                 Console.WriteLine($"Ingredient {piece} already exists in the set!");
-                return;
+                Environment.Exit(1);
             }
             ingredients.Add(piece);
         }
@@ -51,7 +51,7 @@ foreach (var line in recipeData)
     if (pieces.Length != (ingredients.Count + 1))
     {
         Console.WriteLine($"Row length {pieces.Length} does not match ingredients count {ingredients.Count}!");
-        return;
+        Environment.Exit(1);
     }
 
     var ingredient1 = pieces[0];
@@ -59,7 +59,7 @@ foreach (var line in recipeData)
     if (!ingredients.Contains(ingredient1))
     {
         Console.WriteLine($"Ingredient {ingredient1} not found in the set!");
-        return;
+        Environment.Exit(1);
     }
 
     for (int i = 1; i < pieces.Length; i++)
@@ -68,7 +68,7 @@ foreach (var line in recipeData)
         if (recipes.ContainsKey((ingredient1, ingredient2)))
         {
             Console.WriteLine($"Recipe for ({ingredient1}, {ingredient2}) already exists!");
-            return;
+            Environment.Exit(1);
         }
 
         var resultText = pieces[i];
@@ -96,7 +96,7 @@ foreach (var line in recipeData)
                 if (existingIngredients.Ingredient1 != ingredient2 || existingIngredients.Ingredient2 != ingredient1)
                 {
                     Console.WriteLine($"Conflict: Ingredient {result} can be created by both ({existingIngredients.Ingredient1}, {existingIngredients.Ingredient2}) and ({ingredient1}, {ingredient2})");
-                    return;
+                    Environment.Exit(1);
                 }
             }
 
@@ -129,7 +129,7 @@ foreach (var line in inventoryData)
         if (line != "Ingredient,Quantity")
         {
             Console.WriteLine("Invalid inventory header!");
-            return;
+            Environment.Exit(1);
         }
         first = false;
         continue;
@@ -139,25 +139,25 @@ foreach (var line in inventoryData)
     if (pieces.Length != 2)
     {
         Console.WriteLine($"Invalid inventory line: {line}");
-        return;
+        Environment.Exit(1);
     }
     var ingredient = pieces[0];
     if (!int.TryParse(pieces[1], out var quantity) || quantity < 0)
     {
         Console.WriteLine($"Invalid quantity for ingredient {ingredient}: {pieces[1]}");
-        return;
+        Environment.Exit(1);
     }
 
     if (!ingredients.Contains(ingredient))
     {
         Console.WriteLine($"Ingredient {ingredient} not found in ingredients set!");
-        return;
+        Environment.Exit(1);
     }
 
     if (inventory.ContainsKey(ingredient))
     {
         Console.WriteLine($"Ingredient {ingredient} already exists in inventory!");
-        return;
+        Environment.Exit(1);
     }
 
     Console.WriteLine($"Adding to inventory: {ingredient} => {quantity}");
@@ -262,7 +262,7 @@ Console.WriteLine();
 if (!rewardCosts.ContainsKey(targetedReward))
 {
     Console.WriteLine($"Target reward '{targetedReward}' not found in recipes!");
-    return;
+    Environment.Exit(1);
 }
 
 // Get all recipes for the target reward, ordered by efficiency (quantity per base ingredient)
