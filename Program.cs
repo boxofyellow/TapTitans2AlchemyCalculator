@@ -277,21 +277,31 @@ var workingInventory = new Dictionary<string, int>(inventory);
 var totalRewards = 0;
 var craftingPlan = new List<(string Action, string Ingredient1, string Ingredient2, int Quantity, string Details)>();
 
-// Helper function to check if we can craft an ingredient
-bool canCraftIngredient(string ingredient, Dictionary<string, int> currentInventory)
+// Returns a complexity score for obtaining an ingredient given the current inventory.
+// Returns 0 if the ingredient cannot be obtained.
+// Returns the ingredients cost if currently in the inventory
+// Returns the maximum of its sub-ingredient scores if it must be crafted (lower than the
+//   inventory case so that recipes using inventory complex ingredients are prioritised).
+int scoreIngredient(string ingredient, Dictionary<string, int> currentInventory)
 {
     if (currentInventory.GetValueOrDefault(ingredient, 0) > 0)
     {
-        return true;
+        return computeCreateCost(ingredient).Sum(c => c.Value);
     }
 
     if (creationRecipes.TryGetValue(ingredient, out var recipe))
     {
         var (ing1, ing2) = recipe;
-        return canCraftIngredient(ing1, currentInventory) && canCraftIngredient(ing2, currentInventory);
+        var cost1 = scoreIngredient(ing1, currentInventory);
+        var cost2 = scoreIngredient(ing2, currentInventory);
+        if (cost1 == 0 || cost2 == 0)
+        {
+            return 0;
+        }
+        return Math.Max(cost1, cost2);
     }
-    
-    return false;
+
+    return 0;
 }
 
 // Helper function to craft an ingredient (recursively if needed)
@@ -324,48 +334,64 @@ Console.WriteLine("<details>");
 Console.WriteLine("<summary>⚗️ PHASE 1: Using existing complex ingredients</summary>");
 Console.WriteLine();
 
-// Phase 1: Prioritize using complex ingredients to minimize waste
-foreach (var (ing1, ing2, quantity, cost) in targetRecipes)
+// Phase 1: Prioritize using complex ingredients to minimize waste.
+// Each iteration, score every recipe and pick the one with the highest combined score.
+// A score >= 2 on at least one ingredient means it is a complex ingredient (that we have in our inventory).
+while (true)
 {
-    while (true)
+    (string Ingredient1, string Ingredient2, int Quantity, Dictionary<string, int> Cost)? bestRecipe = null;
+    int bestScore = 0;
+
+    foreach (var recipe in targetRecipes)
     {
-        var steps = new List<(string, string, string, string)>();
-        var testInventory = new Dictionary<string, int>(workingInventory);
-        
-        if (tryCraftIngredient(ing1, testInventory, steps) && tryCraftIngredient(ing2, testInventory, steps))
+        var score1 = scoreIngredient(recipe.Ingredient1, workingInventory);
+        var score2 = scoreIngredient(recipe.Ingredient2, workingInventory);
+
+        // Both ingredients must be obtainable and at least one must be complex (score >= 2)
+        if (score1 == 0 || score2 == 0 || Math.Max(score1, score2) < 2)
         {
-            // Calculate how many complex ingredients we used
-            var complexUsed = steps.Count(s => s.Item1 == "CREATE");
-            
-            // Only proceed if we're using at least one complex ingredient in this phase
-            if (complexUsed == 0)
-            {
-                break;
-            }
-            
-            // Apply the crafting
-            workingInventory = testInventory;
-            
-            // Log intermediate crafting steps
-            foreach (var (action, i1, i2, result) in steps)
-            {
-                craftingPlan.Add((action, i1, i2, 1, $"Creating {result}"));
-            }
-            
-            // Log the recipe execution
-            craftingPlan.Add(("CRAFT", ing1, ing2, quantity, $"Yielding {quantity} x {targetedReward}"));
-            totalRewards += quantity;
-            
-            Console.WriteLine($"Crafted ({ing1}, {ing2}) => {quantity} x {targetedReward}");
-            if (steps.Count > 0)
-            {
-                Console.WriteLine($"  Required creating: {string.Join(", ", steps.Select(s => s.Item4))}");
-            }
+            continue;
         }
-        else
+
+        var totalScore = score1 + score2;
+        if (totalScore > bestScore)
         {
-            break;
+            bestScore = totalScore;
+            bestRecipe = recipe;
         }
+    }
+
+    if (bestRecipe == null)
+    {
+        break;
+    }
+
+    var steps = new List<(string, string, string, string)>();
+    var testInventory = new Dictionary<string, int>(workingInventory);
+
+    if (tryCraftIngredient(bestRecipe.Value.Ingredient1, testInventory, steps) &&
+        tryCraftIngredient(bestRecipe.Value.Ingredient2, testInventory, steps))
+    {
+        workingInventory = testInventory;
+
+        foreach (var (action, i1, i2, result) in steps)
+        {
+            craftingPlan.Add((action, i1, i2, 1, $"Creating {result}"));
+        }
+
+        craftingPlan.Add(("CRAFT", bestRecipe.Value.Ingredient1, bestRecipe.Value.Ingredient2,
+            bestRecipe.Value.Quantity, $"Yielding {bestRecipe.Value.Quantity} x {targetedReward}"));
+        totalRewards += bestRecipe.Value.Quantity;
+
+        Console.WriteLine($"Crafted ({bestRecipe.Value.Ingredient1}, {bestRecipe.Value.Ingredient2}) => {bestRecipe.Value.Quantity} x {targetedReward}");
+        if (steps.Count > 0)
+        {
+            Console.WriteLine($"  Required creating: {string.Join(", ", steps.Select(s => s.Item4))}");
+        }
+    }
+    else
+    {
+        break;
     }
 }
 
