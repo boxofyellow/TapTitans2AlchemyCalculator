@@ -334,11 +334,13 @@ foreach (var (ing1, ing2, quantity, cost) in targetRecipes)
         
         if (tryCraftIngredient(ing1, testInventory, steps) && tryCraftIngredient(ing2, testInventory, steps))
         {
-            // Calculate how many complex ingredients we used
-            var complexUsed = steps.Count(s => s.Item1 == "CREATE");
-            
-            // Only proceed if we're using at least one complex ingredient in this phase
-            if (complexUsed == 0)
+            // Only proceed if at least one top-level ingredient is complex and came from inventory
+            // (i.e. it has a creation recipe but was NOT crafted — no CREATE step produced it)
+            var createdIngredients = new HashSet<string>(steps.Where(s => s.Item1 == "CREATE").Select(s => s.Item4));
+            var ing1FromInventory = creationRecipes.ContainsKey(ing1) && !createdIngredients.Contains(ing1);
+            var ing2FromInventory = creationRecipes.ContainsKey(ing2) && !createdIngredients.Contains(ing2);
+
+            if (!ing1FromInventory && !ing2FromInventory)
             {
                 break;
             }
