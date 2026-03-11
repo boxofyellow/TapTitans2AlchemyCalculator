@@ -348,7 +348,10 @@ while (true)
         var score2 = scoreIngredient(recipe.Ingredient2, workingInventory);
 
         // Both ingredients must be obtainable and at least one must be complex (score >= 2)
-        if (score1 == 0 || score2 == 0 || Math.Max(score1, score2) < 2) continue;
+        if (score1 == 0 || score2 == 0 || Math.Max(score1, score2) < 2)
+        {
+            continue;
+        }
 
         var totalScore = score1 + score2;
         if (totalScore > bestScore)
@@ -358,7 +361,10 @@ while (true)
         }
     }
 
-    if (bestRecipe == null) break;
+    if (bestRecipe == null)
+    {
+        break;
+    }
 
     var steps = new List<(string, string, string, string)>();
     var testInventory = new Dictionary<string, int>(workingInventory);
