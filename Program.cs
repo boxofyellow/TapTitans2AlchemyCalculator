@@ -279,8 +279,7 @@ var craftingPlan = new List<(string Action, string Ingredient1, string Ingredien
 
 // Returns a complexity score for obtaining an ingredient given the current inventory.
 // Returns 0 if the ingredient cannot be obtained.
-// Returns the sum of its base ingredient costs if it is already in inventory (highest score,
-//   ensures inventory items are always preferred over freshly crafted ones).
+// Returns the ingredients cost if currently in the inventory
 // Returns the maximum of its sub-ingredient scores if it must be crafted (lower than the
 //   inventory case so that recipes using inventory complex ingredients are prioritised).
 int scoreIngredient(string ingredient, Dictionary<string, int> currentInventory)
@@ -295,7 +294,10 @@ int scoreIngredient(string ingredient, Dictionary<string, int> currentInventory)
         var (ing1, ing2) = recipe;
         var cost1 = scoreIngredient(ing1, currentInventory);
         var cost2 = scoreIngredient(ing2, currentInventory);
-        if (cost1 == 0 || cost2 == 0) return 0;
+        if (cost1 == 0 || cost2 == 0)
+        {
+            return 0;
+        }
         return Math.Max(cost1, cost2);
     }
 
@@ -334,8 +336,7 @@ Console.WriteLine();
 
 // Phase 1: Prioritize using complex ingredients to minimize waste.
 // Each iteration, score every recipe and pick the one with the highest combined score.
-// A score >= 2 on at least one ingredient means it is a complex ingredient (either from
-// inventory or craftable from inventory-backed sub-ingredients).
+// A score >= 2 on at least one ingredient means it is a complex ingredient (that we have in our inventory).
 while (true)
 {
     (string Ingredient1, string Ingredient2, int Quantity, Dictionary<string, int> Cost)? bestRecipe = null;
