@@ -65,7 +65,7 @@ foreach (var line in recipeData)
     for (int i = 1; i < pieces.Length; i++)
     {
         var ingredient2 = ingredients[i - 1];
-        if (recipes.ContainsKey((ingredient1, ingredient2)))
+        if (recipes.ContainsKey((Ingredient1: ingredient1, Ingredient2: ingredient2)))
         {
             Console.WriteLine($"Recipe for ({ingredient1}, {ingredient2}) already exists!");
             Environment.Exit(1);
@@ -87,7 +87,7 @@ foreach (var line in recipeData)
         }
 
         Console.WriteLine($"Adding recipe: ({ingredient1}, {ingredient2}) => [{quantity}] x {result}");
-        recipes[(ingredient1, ingredient2)] = (quantity, result);
+        recipes[(Ingredient1: ingredient1, Ingredient2: ingredient2)] = (Quantity: quantity, Result: result);
 
         if (ingredients.Contains(result))
         {
@@ -101,7 +101,7 @@ foreach (var line in recipeData)
             }
 
             Console.WriteLine($"Adding creation recipe for {result}: ({ingredient1}, {ingredient2})");
-            creationRecipes[result] = (ingredient1, ingredient2);
+            creationRecipes[result] = (Ingredient1: ingredient1, Ingredient2: ingredient2);
         }
     }
 }
@@ -237,7 +237,7 @@ for (int i = 0; i < ingredients.Count; i++)
             existingCosts = [];
             rewardCosts[result] = existingCosts;
         }
-        existingCosts.Add((ingredient1, ingredient2, quantity, cost));
+        existingCosts.Add((Ingredient1: ingredient1, Ingredient2: ingredient2, Quantity: quantity, Cost: cost));
     }
 }
 
@@ -305,7 +305,7 @@ int scoreIngredient(string ingredient, Dictionary<string, int> currentInventory)
 }
 
 // Helper function to craft an ingredient (recursively if needed)
-bool tryCraftIngredient(string ingredient, Dictionary<string, int> currentInventory, List<(string, string, string, string)> steps)
+bool tryCraftIngredient(string ingredient, Dictionary<string, int> currentInventory, List<(string Action, string Ingredient1, string Ingredient2, string Result)> steps)
 {
     if (currentInventory.GetValueOrDefault(ingredient, 0) > 0)
     {
@@ -322,7 +322,7 @@ bool tryCraftIngredient(string ingredient, Dictionary<string, int> currentInvent
 
     if (tryCraftIngredient(ing1, currentInventory, steps) && tryCraftIngredient(ing2, currentInventory, steps))
     {
-        steps.Add(("CREATE", ing1, ing2, ingredient));
+        steps.Add((Action: "CREATE", Ingredient1: ing1, Ingredient2: ing2, Result: ingredient));
         return true;
     }
     
@@ -366,7 +366,7 @@ while (true)
         break;
     }
 
-    var steps = new List<(string, string, string, string)>();
+    var steps = new List<(string Action, string Ingredient1, string Ingredient2, string Result)>();
     var testInventory = new Dictionary<string, int>(workingInventory);
 
     if (tryCraftIngredient(bestRecipe.Value.Ingredient1, testInventory, steps) &&
@@ -376,17 +376,17 @@ while (true)
 
         foreach (var (action, i1, i2, result) in steps)
         {
-            craftingPlan.Add((action, i1, i2, 1, $"Creating {result}"));
+            craftingPlan.Add((Action: action, Ingredient1: i1, Ingredient2: i2, Quantity: 1, Details: $"Creating {result}"));
         }
 
-        craftingPlan.Add(("CRAFT", bestRecipe.Value.Ingredient1, bestRecipe.Value.Ingredient2,
-            bestRecipe.Value.Quantity, $"Yielding {bestRecipe.Value.Quantity} x {targetedReward}"));
+        craftingPlan.Add((Action: "CRAFT", Ingredient1: bestRecipe.Value.Ingredient1, Ingredient2: bestRecipe.Value.Ingredient2,
+            Quantity: bestRecipe.Value.Quantity, Details: $"Yielding {bestRecipe.Value.Quantity} x {targetedReward}"));
         totalRewards += bestRecipe.Value.Quantity;
 
         Console.WriteLine($"Crafted ({bestRecipe.Value.Ingredient1}, {bestRecipe.Value.Ingredient2}) => {bestRecipe.Value.Quantity} x {targetedReward}");
         if (steps.Count > 0)
         {
-            Console.WriteLine($"  Required creating: {string.Join(", ", steps.Select(s => s.Item4))}");
+            Console.WriteLine($"  Required creating: {string.Join(", ", steps.Select(s => s.Result))}");
         }
     }
     else
@@ -412,7 +412,7 @@ foreach (var (ing1, ing2, quantity, cost) in targetRecipes)
 {
     while (true)
     {
-        var steps = new List<(string, string, string, string)>();
+        var steps = new List<(string Action, string Ingredient1, string Ingredient2, string Result)>();
         var testInventory = new Dictionary<string, int>(workingInventory);
         
         if (tryCraftIngredient(ing1, testInventory, steps) && tryCraftIngredient(ing2, testInventory, steps))
@@ -425,18 +425,18 @@ foreach (var (ing1, ing2, quantity, cost) in targetRecipes)
             {
                 if (action == "CREATE")
                 {
-                    craftingPlan.Add((action, i1, i2, 1, $"Creating {result}"));
+                    craftingPlan.Add((Action: action, Ingredient1: i1, Ingredient2: i2, Quantity: 1, Details: $"Creating {result}"));
                 }
             }
             
             // Log the recipe execution
-            craftingPlan.Add(("CRAFT", ing1, ing2, quantity, $"Yielding {quantity} x {targetedReward}"));
+            craftingPlan.Add((Action: "CRAFT", Ingredient1: ing1, Ingredient2: ing2, Quantity: quantity, Details: $"Yielding {quantity} x {targetedReward}"));
             totalRewards += quantity;
             
             Console.WriteLine($"Crafted ({ing1}, {ing2}) => {quantity} x {targetedReward}");
             if (steps.Count > 0)
             {
-                var createdIngredients = steps.Where(s => s.Item1 == "CREATE").Select(s => s.Item4);
+                var createdIngredients = steps.Where(s => s.Action == "CREATE").Select(s => s.Result);
                 if (createdIngredients.Any())
                 {
                     Console.WriteLine($"  Required creating: {string.Join(", ", createdIngredients)}");
@@ -486,12 +486,12 @@ foreach (var (action, ing1, ing2, qty, details) in craftingPlan)
 Console.WriteLine();
 Console.WriteLine("## 📊 RECIPE SUMMARY");
 Console.WriteLine();
-var recipeOrder = new List<(string, string)>();
-var recipeCounts = new Dictionary<(string, string), int>();
+var recipeOrder = new List<(string Ingredient1, string Ingredient2)>();
+var recipeCounts = new Dictionary<(string Ingredient1, string Ingredient2), int>();
 
 foreach (var (action, ing1, ing2, qty, details) in craftingPlan)
 {
-    var key = (ing1, ing2);
+    var key = (Ingredient1: ing1, Ingredient2: ing2);
     if (!recipeCounts.ContainsKey(key))
     {
         recipeOrder.Add(key);
@@ -501,12 +501,12 @@ foreach (var (action, ing1, ing2, qty, details) in craftingPlan)
 
 // Topologically sort so that recipes creating intermediate ingredients appear
 // before recipes that consume them
-var recipesInSummary = new HashSet<(string, string)>(recipeOrder);
-var visited = new HashSet<(string, string)>();
-var currentlyVisiting = new HashSet<(string, string)>();
-var sortedRecipes = new List<(string, string)>();
+var recipesInSummary = new HashSet<(string Ingredient1, string Ingredient2)>(recipeOrder);
+var visited = new HashSet<(string Ingredient1, string Ingredient2)>();
+var currentlyVisiting = new HashSet<(string Ingredient1, string Ingredient2)>();
+var sortedRecipes = new List<(string Ingredient1, string Ingredient2)>();
 
-void visitRecipe((string, string) recipe)
+void visitRecipe((string Ingredient1, string Ingredient2) recipe)
 {
     if (visited.Contains(recipe)) return;
     if (!currentlyVisiting.Add(recipe))
@@ -536,8 +536,8 @@ foreach (var recipe in recipeOrder)
 
 foreach (var (ing1, ing2) in sortedRecipes)
 {
-    var count = recipeCounts[(ing1, ing2)];
-    var recipeResult = recipes[(ing1, ing2)];
+    var count = recipeCounts[(Ingredient1: ing1, Ingredient2: ing2)];
+    var recipeResult = recipes[(Ingredient1: ing1, Ingredient2: ing2)];
     Console.WriteLine($"- **({ing1} + {ing2})** => {recipeResult.Quantity} x {recipeResult.Result}: Execute {count} time(s)");
 }
 
