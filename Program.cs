@@ -467,7 +467,8 @@ Console.WriteLine();
 Console.WriteLine("</details>");
 
 Console.WriteLine();
-Console.WriteLine("## 📋 DETAILED CRAFTING PLAN");
+Console.WriteLine("<details>");
+Console.WriteLine("<summary>📋 DETAILED CRAFTING PLAN</summary>");
 Console.WriteLine();
 var stepNumber = 1;
 foreach (var (action, ing1, ing2, qty, details) in craftingPlan)
@@ -482,6 +483,8 @@ foreach (var (action, ing1, ing2, qty, details) in craftingPlan)
     }
     stepNumber++;
 }
+Console.WriteLine();
+Console.WriteLine("</details>");
 
 Console.WriteLine();
 Console.WriteLine("## 📊 RECIPE SUMMARY");
