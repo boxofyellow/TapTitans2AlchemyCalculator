@@ -1,18 +1,18 @@
 // FROM: https://docs.google.com/spreadsheets/d/1o95Ipwx6NIyFV3LCz9LGNbH9_WELHF-pbpkM31YwXyY/edit?usp=sharing https://www.reddit.com/r/TapTitans2/comments/13e81ua/tt2_529_alchemy_event_recipe_matrix/
 X,Leaf,Petal,Berries,Water,Poison,Crystal,Mushroom,Flame,Power,Lightning,Essence,Scale,Beetle,Spirit,Steel,Tooth
-Leaf,Petal,Water,Safety Tongs (Event Set),12 Currency,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Steel,Tooth,Unknown
+Leaf,Petal,Water,Safety Tongs (Event Set),12 Currency,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown
 Petal,Water,Berries,Poison,Crystal,25 Common Equipment,22 Currency,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown
 Berries,Safety Tongs (Event Set),Poison,24 Currency,21 Currency,Mushroom,20 Perk Tickets,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown
-Water,12 Currency,Crystal,21 Currency,Unknown,Unknown,Flame,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown
-Poison,Unknown,25 Common Equipment,Mushroom,Unknown,5 Crafting Shards,1 Skill Point,Power,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown
+Water,12 Currency,Crystal,21 Currency,Unknown,Event Equipment (Hair of Madness),Flame,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown
+Poison,Unknown,25 Common Equipment,Mushroom,Event Equipment (Hair of Madness),5 Crafting Shards,1 Skill Point,Power,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown
 Crystal,Unknown,22 Currency,20 Perk Tickets,Flame,1 Skill Point,Unknown,8 Pet Eggs,Lightning,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown
 Mushroom,Unknown,Unknown,Unknown,Unknown,Power,8 Pet Eggs,Unknown,58 Currency,Essence,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown
 Flame,Unknown,Unknown,Unknown,Unknown,Unknown,Lightning,58 Currency,Unknown,Unknown,3 Skill Points,Scale,Unknown,Unknown,Unknown,Unknown,Unknown
 Power,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Essence,Unknown,Unknown,Unknown,Beetle,Unknown,Unknown,Unknown,Unknown,Unknown
-Lightning,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,3 Skill Points,Unknown,Unknown,Unknown,Spirit,Legendary Equipment,Unknown,Unknown,Unknown
-Essence,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Beetle,Unknown,Unknown,Unknown,227 Currency,Unknown,Unknown,Unknown
+Lightning,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,3 Skill Points,Unknown,Unknown,Unknown,Spirit,Legendary Equipment,50 Wildcards,Unknown,Unknown
+Essence,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Scale,Beetle,Unknown,Unknown,Unknown,227 Currency,Unknown,Unknown,Unknown
 Scale,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Spirit,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown
-Beetle,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Legendary Equipment,227 Currency,Unknown,Unknown,Unknown,Unknown,Unknown
-Spirit,Steel,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown
-Steel,Tooth,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown
-Tooth,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Wildcards
+Beetle,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Legendary Equipment,227 Currency,Unknown,Unknown,Steel,Unknown,Unknown
+Spirit,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,50 Wildcards,Unknown,Unknown,Steel,Unknown,Unknown,Unknown
+Steel,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Tooth,Unknown
+Tooth,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown
