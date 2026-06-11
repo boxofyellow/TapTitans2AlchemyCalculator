@@ -1,18 +1,18 @@
 // FROM: https://docs.google.com/spreadsheets/d/1o95Ipwx6NIyFV3LCz9LGNbH9_WELHF-pbpkM31YwXyY/edit?usp=sharing https://www.reddit.com/r/TapTitans2/comments/13e81ua/tt2_529_alchemy_event_recipe_matrix/
-X,Poison,Tooth,Steel,Power,Spirit,Feather,Egg,Mushroom,Pepper,Sand,Lightning,Beetle,Flame,Scale,Essence,Shadow
-Poison,1 Pet Eggs,Power,Spirit,Event Equipment (Saftey Tongs),18 Currency,Egg,1 Skill Points,32 Currency,32 Currency,20 Raid Cards,2 Skill Points,4 Hero Weapons,116 Currency,1 Clan Scroll,116 Currency,222 Currency
-Tooth,Power,12 Currency,Feather,18 Currency,1 Perk,Event Equipment (Hair of Madness),10 Raid Cards,4 Crafting Shards,2 Perks,60 Currency,20 Raid Cards,3 Perks,116 Currency,116 Currency,116 Currency,3 Clan Scroll
-Steel,Spirit,Feather,12 Currency,6 Raid Cards,1 Rare Equipment,3 Pet Eggs,10 Raid Cards,4 Crafting Shards,Event Equipment (Lab Coat),60 Currency,2 Skill Points,60 Currency,116 currency,116 Currency,116 Currency,232 Currency
-Power,Event Equipment (Saftey Tongs),18 Currency,6 Raid Cards,2 Rare Equipment,25 Currency,Pepper,2 Hero Weapons,12 Raid Cards,3 Rare Equipment,9 Crafting Shards,16 Wildcards,66 Currency,122 Currency,122 Currency,12 Rare Equipment,3 Clan Scroll
-Spirit,18 Currency,1 Perk,1 Rare Equipment,25 Currency,25 Currency,Mushroom,38 Currency,38 Currency,Event Equipment (Master of Elements),66 Currency,2 Skill Points,22 Raid Cards,122 Currency,Event Equipment (Molecularization),8 Hero Weapons,238 Currency
-Feather,Egg,Event Equipment (Hair of Madness),3 Pet Eggs,Pepper,Mushroom,25 Currency,6 Pet Eggs,12 Raid Cards,Sand,66 Currency,22 Raid cards,66 Currency,122 Currency,122 Currency,40 Raid Cards,39 Pet Eggs
-Egg,1 Skill Points,10 Raid Cards,10 Raid Cards,2 Hero Weapons,38 Currency,6 Pet Eggs,52 Currency,Legendary Equip (Shadowgold Armor),Beetle,13 Pet Eggs,80 Currency,26 Raid Cards,136 Currency,136 Currency,45 Raid Cards,252 Currency
-Mushroom,32 Currency,4 Crafting Shards,4 Crafting Shards,12 Raid Cards,38 Currency,12 Raid Cards,Legendary Equip (Shadowgold Armor),52 Currency,Lightning,13 Pet Eggs,Legendary Equipment (Shadowgold Goblet),13 Pet Eggs,136 Currency,22 Pet Eggs,19 Crafting Shards,3 Fortune Scrolls
-Pepper,32 Currency,2 Perks,Event Equipment (Lab Coat),3 Rare Equipment,Event Equipment (Master of Elements),Sand,Beetle,Lightning,52 Currency,3 Skill Points,Essence,11 Crafting Shards,19 Crafting Shards,19 Crafting Shards,19 Crafting Shards,252 Currency
-Sand,20 Raid Cards,60 Currency,60 Currency,9 Crafting Shards,66 Currency,66 Currency,13 Pet Eggs,13 Pet Eggs,3 Skill Points,108 Currency,108 Currency,Flame,8 Fortune Weapons,54 Raid Cards,54 Raid Cards,3 Fortune Scrolls
-Lightning,2 Skill Points,20 Raid Cards,2 Skill Points,16 Wildcards,2 Skill Points,22 Raid cards,80 Currency,Legendary Equipment (Shadowgold Goblet),Essence,108 Currency,Legendary Equipment (Shackles of Greed),Scale,164 Currency,164 Currency + Avatar,41 Wildcards,280 Currency
-Beetle,4 Hero Weapons,3 Perks,60 Currency,66 Currency,22 Raid Cards,66 Currency,26 Raid Cards,13 Pet Eggs,11 Crafting Shards,Flame,Scale,4 Skill Points,Legendary Equipment (Gilded Dusk),Legendary Equipment (Shadowgold Crest),6 Skill Points,11 Skill Points
-Flame,116 Currency,116 Currency,116 currency,122 Currency,122 Currency,122 Currency,136 Currency,136 Currency,19 Crafting Shards,8 Fortune Weapons,164 Currency,Legendary Equipment (Gilded Dusk),Shadow,11 Fortune Weapons,220 Currency,84 Wildcards
-Scale,1 Clan Scroll,116 Currency,116 Currency,122 Currency,Event Equipment (Molecularization),122 Currency,136 Currency,22 Pet Eggs,19 Crafting Shards,54 Raid Cards,164 Currency + Avatar,Legendary Equipment (Shadowgold Crest),11 Fortune Weapons,220 Currency,220 Currency,84 Wildcards
-Essence,116 Currency,116 Currency,116 Currency,12 Rare Equipment,8 Hero Weapons,40 Raid Cards,45 Raid Cards,19 Crafting Shards,19 Crafting Shards,54 Raid Cards,41 Wildcards,6 Skill Points,220 Currency,220 Currency,2 Fortune Scrolls,336 Currency
-Shadow,222 Currency,3 Clan Scroll,232 Currency,3 Clan Scroll,238 Currency,39 Pet Eggs,252 Currency,3 Fortune Scrolls,252 Currency,3 Fortune Scrolls,280 Currency,11 Skill Points,84 Wildcards,84 Wildcards,336 Currency,1 Legendary Insult
+X,Leaf,Petal,Berries,Water,Poison,Crystal,Mushroom,Flame,Power,Lightning,Essence,Scale,Beetle,Spirit,Steel,Tooth
+Leaf,Petal,Water,Safety Tongs (Event Set),12 Currency,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Steel,Tooth,Unknown
+Petal,Water,Berries,Poison,Crystal,25 Common Equipment,22 Currency,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown
+Berries,Safety Tongs (Event Set),Poison,24 Currency,21 Currency,Mushroom,20 Perk Tickets,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown
+Water,12 Currency,Crystal,21 Currency,Unknown,Unknown,Flame,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown
+Poison,Unknown,25 Common Equipment,Mushroom,Unknown,5 Crafting Shards,1 Skill Point,Power,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown
+Crystal,Unknown,22 Currency,20 Perk Tickets,Flame,1 Skill Point,Unknown,8 Pet Eggs,Lightning,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown
+Mushroom,Unknown,Unknown,Unknown,Unknown,Power,8 Pet Eggs,Unknown,58 Currency,Essence,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown
+Flame,Unknown,Unknown,Unknown,Unknown,Unknown,Lightning,58 Currency,Unknown,Unknown,3 Skill Points,Scale,Unknown,Unknown,Unknown,Unknown,Unknown
+Power,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Essence,Unknown,Unknown,Unknown,Beetle,Unknown,Unknown,Unknown,Unknown,Unknown
+Lightning,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,3 Skill Points,Unknown,Unknown,Unknown,Spirit,Legendary Equipment,Unknown,Unknown,Unknown
+Essence,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Beetle,Unknown,Unknown,Unknown,227 Currency,Unknown,Unknown,Unknown
+Scale,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Spirit,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown
+Beetle,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Legendary Equipment,227 Currency,Unknown,Unknown,Unknown,Unknown,Unknown
+Spirit,Steel,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown
+Steel,Tooth,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown
+Tooth,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Wildcards
