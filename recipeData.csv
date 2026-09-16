@@ -1,6 +1,6 @@
 X,Pepper,Berries,Mushroom,Sand,Petal,Acorn,Feather,Shadow,Spirit,Essence,Power,Beetle,Tooth,Flame,Steel,Scale
 Pepper,12 Currency,Sand,Petal,18 Equipment,Event Equipment (Safety Tongs),Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,232 Currency
-Berries,Sand,12 Currency,Acorn,10 Perk Tickets,Event Equipment (Hair of Madness),Unknown,Unknown,10 Perk Tickets,Unknown,Unknown,Unknown,Unknown,116 Currency,Unknown,Unknown,Unknown
+Berries,Sand,12 Currency,Acorn,10 Perk Tickets,Event Equipment (Hair of Madness),Unknown,Unknown,10 Perk Tickets,Unknown,Unknown,Unknown,Unknown,116 Currency,Unknown,Unknown,1 Wildcards
 Mushroom,Petal,Acorn,12 Currency,1 Rare Equipment,Event Equipment (Lab Coat),6 Raid Cards,Unknown,5 Eggs,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown
 Sand,18 Equipment,10 Perk Tickets,1 Rare Equipment,2 Rare Equipment,Spirit,Feather,Unknown,38 Currency,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown
 Petal,Event Equipment (Safety Tongs),Event Equipment (Hair of Madness),Event Equipment (Lab Coat),Spirit,Unknown,Shadow,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown
@@ -13,6 +13,6 @@ Power,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,St
 Beetle,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Flame,Tooth,Unknown,Unknown,Unknown,Unknown,Unknown
 Tooth,Unknown,116 Currency,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,16 Fortune Weapons
 Flame,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Scale,Unknown
-Steel,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Scale,Unknown,Unknown
+Steel,1 Wildcards,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Scale,Unknown,Unknown
 Scale,232 Currency,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,16 Fortune Weapons,Unknown,Unknown,Unique Equipment (The Retaliator Reforged)
 //,,,,,,,,,,,,,,,, FROM: https://docs.google.com/spreadsheets/d/1o95Ipwx6NIyFV3LCz9LGNbH9_WELHF-pbpkM31YwXyY/edit?usp=sharing https://www.reddit.com/r/TapTitans2/comments/13e81ua/tt2_529_alchemy_event_recipe_matrix/
